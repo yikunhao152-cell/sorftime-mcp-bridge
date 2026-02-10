@@ -6,7 +6,9 @@ app = Flask(__name__)
 
 # Sorftime MCP配置
 MCP_URL = "https://mcp.sorftime.com"
-ACCOUNT_SK = "q1nqb0nlm3zzt1rsy1joqlvzovzyut09"
+
+# 【修改点1】这里替换成了你图片里最新的 Key (zvjwuezgq1dbl1fvm0zxrjhqz3ljut09)
+ACCOUNT_SK = os.environ.get("ACCOUNT_SK", "zvjwuezgq1dbl1fvm0zxrjhqz3ljut09") 
 
 @app.route('/', methods=['GET'])
 def home():
@@ -28,17 +30,26 @@ def call_mcp():
             "params": params
         }
         
+        # 【修改点2】注意看这里！原本是 key=account-sk (这是错的)，
+        # 现在改成了 key={ACCOUNT_SK}，这样才能把你上面的真 Key 传进去。
         response = requests.post(
-            f"{MCP_URL}?key=account-sk",
+            f"{MCP_URL}?key={ACCOUNT_SK}", 
             json=mcp_request,
             headers={"Content-Type": "application/json"},
             timeout=30
         )
         
-        return jsonify({
-            "success": True,
-            "data": response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text
-        })
+        try:
+            return jsonify({
+                "success": True,
+                "data": response.json()
+            })
+        except:
+            return jsonify({
+                "success": True,
+                "data": response.text
+            })
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
